@@ -430,11 +430,10 @@ sub selectSkill {
 sub loadMonDB {
     %monsterDB = undef;
     debug( "Enhanced Casting: Loading Database\n", 'enhancedCasting', 2 );
-    my $file = Settings::getTableFilename('mob_db.txt');
-    error( "Enhanced Casting: can't load $file for monster information\n",
-        'enhancedCasting', 0 )
-      unless ( -r $file );
-    open my $fh, "<", $file;
+    open (my $fh, '<','plugins/mob_db.txt') 
+    or open (my $fh, '<', 'plugins/enhancedCasting/mob_db.txt') 
+    or error( "Enhanced Casting: can't load $file for monster information\n", 'enhancedCasting', 0 );
+    
     my $i = 0;
     while (<$fh>) {
         next unless m/^(\d{4}),/;
