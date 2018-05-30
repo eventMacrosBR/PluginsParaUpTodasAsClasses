@@ -411,7 +411,7 @@ sub loadMonDB {
     while (<$fh>) {
         next unless m/^(\d{4}),/;
         my (
-            $ID,         $Sprite_Name, $kROName, $iROName,
+            $ID,         $Sprite_Name, $kROName, $bROName,
             $LV,         $HP,          $SP,      $EXP,
             $JEXP,       $Range1,      $ATK1,    $ATK2,
             $DEF,        $MDEF,        $STR,     $AGI,
