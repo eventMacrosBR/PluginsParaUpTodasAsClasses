@@ -164,8 +164,7 @@ for my $tlevel ( 1 .. 4 ) {
         my $base       = $element_lut[ $x++ ];
         my @emodifiers = (split);
         for my $i ( 0 .. $#element_lut ) {
-            $element_modifiers{ $element_lut[$i] . $tlevel }->{$base} =
-              $emodifiers[$i] / 100;
+            $element_modifiers{ $element_lut[$i] . $tlevel }->{$base} = $emodifiers[$i] / 100;
         }
     }
     delete $raw_modifiers{ 'lvl' . $tlevel };
@@ -219,7 +218,7 @@ sub selectSkill {
         {
             my $skillObj = Skill->new( name => $config{ $prefix . $i } );
             unless ( $skillObj->getHandle ) {
-                my $msg =
+                my $msg = 
                     "Unknown skill name "
                   . $config{ $prefix . $i }
                   . " in $prefix.$i\n";
@@ -237,40 +236,32 @@ sub selectSkill {
             my $charpos     = main::calcPosition($char);
             my $monsterpos  = main::calcPosition($currentTarget);
 
-            $delay{ $prefix . $i . "_blockDelayBeforeUse" }{'timeout'} =
-              $config{ $prefix . $i . "_blockDelayBeforeUse" };
+            $delay{ $prefix . $i . "_blockDelayBeforeUse" }{'timeout'} = $config{ $prefix . $i . "_blockDelayBeforeUse" };
             if ( !$delay{ $prefix . $i . "_blockDelayBeforeUse" }{'set'} ) {
                 $delay{ $prefix . $i . "_blockDelayBeforeUse" }{'time'} = time;
                 $delay{ $prefix . $i . "_blockDelayBeforeUse" }{'set'}  = 1;
             }
 
-            $delay{ $prefix . $skillObj->getHandle . "_skillDelay" }{'timeout'}
-              = $config{ $prefix . $i . "_skillDelay" };
+            $delay{ $prefix . $skillObj->getHandle . "_skillDelay" }{'timeout'} = $config{ $prefix . $i . "_skillDelay" };
             if ( $skillUse{ $skillObj->getIDN } )
             {    # set the delays only when the skill gets successfully cast
-                $delay{ $prefix . $skillObj->getHandle . "_skillDelay" }{'time'}
-                  = time;
+                $delay{ $prefix . $skillObj->getHandle . "_skillDelay" }{'time'} = time;
                 $skillUse{ $skillObj->getIDN } = 0;
             }
 
             if ( $currentTarget->{element} && $currentTarget->{element} ne '' )
             {
                 $element = $currentTarget->{element};
-                debug(
-"enhancedCasting: Monster $currentTarget->{name} has changed element to $currentTarget->{element}\n",
+                debug( "enhancedCasting: Monster $currentTarget->{name} has changed element to $currentTarget->{element}\n",
                     'enhancedCasting', 3
                 );
             }
 
-            if (
-                $currentTarget->statusActive(
-                    'BODYSTATE_STONECURSE, BODYSTATE_STONECURSE_ING')
-              )
+            if ( $currentTarget->statusActive( 'BODYSTATE_STONECURSE, BODYSTATE_STONECURSE_ING') )
             {
                 $element     = 'Earth';
                 $element_lvl = 1;
-                debug(
-"enhancedCasting: Monster $currentTarget->{name} is petrified changing element to Earth\n",
+                debug( "enhancedCasting: Monster $currentTarget->{name} is petrified changing element to Earth\n",
                     'enhancedCasting', 3
                 );
             }
@@ -278,151 +269,132 @@ sub selectSkill {
             if ( $currentTarget->statusActive('BODYSTATE_FREEZING') ) {
                 $element     = 'Water';
                 $element_lvl = 1;
-                debug(
-"enhancedCasting: Monster $currentTarget->{name} is frozen changing element to Water\n",
+                debug( "enhancedCasting: Monster $currentTarget->{name} is frozen changing element to Water\n",
                     'enhancedCasting', 3
                 );
             }
-
-            if (
-                main::timeOut(
-                    $delay{ $prefix . $skillObj->getHandle . "_skillDelay" }
-                )
-                && main::timeOut(
-                    $delay{ $prefix . $i . "_blockDelayAfterUse" } )
-                && (
-                    ( !$config{ $prefix . $i . "_target" } )
-                    || existsInList(
-                        $config{ $prefix . $i . "_target" },
-                        $currentTarget->{'name'}
+            
+            if ( !main::timeOut( $delay{ $prefix . $skillObj->getHandle . "_skillDelay" } ) ) {
+                next;
+            }
+            
+            if ( !main::timeOut($delay{ $prefix . $i . "_blockDelayAfterUse" } ) ) {
+                next;
+            }
+            
+            unless ( ( !$config{ $prefix . $i . "_target" }
+                || !existsInList($config{ $prefix . $i . "_target" },$currentTarget->{'name'} ) ) ) {
+                next;
+            }
+            
+            unless ( ( ( !$config{ $prefix . $i . "_notTarget" } ) 
+                || existsInList( $config{ $prefix . $i . "_notTarget" }, $currentTarget->{'name'} ) ) ) 
+            {
+                next;
+            }
+            
+            unless ( ( !$config{ $prefix . $i . "_Element" } )
+                || ( 
+                        existsInList( $config{ $prefix . $i . "_Element" }, $element )
+                        || existsInList( $config{ $prefix . $i . "_Element" }, $element . $element_lvl )
                     )
                 )
-                && (
-                    ( !$config{ $prefix . $i . "_notTarget" } )
-                    || !existsInList(
-                        $config{ $prefix . $i . "_notTarget" },
-                        $currentTarget->{'name'}
+            {
+                next;
+            }
+            
+            unless ( ( !$config{ $prefix . $i . "_notElement" } )
+                    || ( existsInList( $config{ $prefix . $i . "_notElement" }, $element )
+                        || existsInList( $config{ $prefix . $i . "_notElement" }, $element . $element_lvl )
                     )
                 )
-                && (
-                    ( !$config{ $prefix . $i . "_Element" } )
-                    || (
-                        existsInList( $config{ $prefix . $i . "_Element" },
-                            $element )
-                        || existsInList(
-                            $config{ $prefix . $i . "_Element" },
-                            $element . $element_lvl
-                        )
-                    )
-                )
-                && (
-                    ( !$config{ $prefix . $i . "_notElement" } )
-                    || (
-                        !existsInList( $config{ $prefix . $i . "_notElement" },
-                            $element )
-                        && !existsInList(
-                            $config{ $prefix . $i . "_notElement" },
-                            $element . $element_lvl
-                        )
-                    )
-                )
-                && ( ( !$config{ $prefix . $i . "_Race" } )
-                    || existsInList( $config{ $prefix . $i . "_Race" }, $race )
-                )
-                && (
-                    ( !$config{ $prefix . $i . "_notRace" } )
-                    || !existsInList(
-                        $config{ $prefix . $i . "_notRace" }, $race
-                    )
-                )
-                && ( ( !$config{ $prefix . $i . "_Size" } )
+            {
+                next;
+            }
+            
+            unless ( ( !$config{ $prefix . $i . "_Race" } )
+                || existsInList( $config{ $prefix . $i . "_Race" }, $race ) )
+            {
+                next;
+            }
+            
+            unless ( ( !$config{ $prefix . $i . "_notRace" } )
+                    || !existsInList( $config{ $prefix . $i . "_notRace" }, $race ) )
+            {
+                next;
+            }
+            
+            unless ( ( !$config{ $prefix . $i . "_Size" } )
                     || existsInList( $config{ $prefix . $i . "_Size" }, $size )
                 )
-                && (
-                    ( !$config{ $prefix . $i . "_notSize" } )
-                    || !existsInList(
-                        $config{ $prefix . $i . "_notSize" }, $size
-                    )
-                )
-                && (   ( !$config{ $prefix . $i . "_notImmovable" } )
-                    || ( $monsterDB{$ID}{mode} & MD_CANMOVE ) )
-                && (
-                    ( !$config{ $prefix . $i . "_whenStatusActive" } )
-                    || (
-                        $char->statusActive(
-                            $config{ $prefix . $i . "_whenStatusActive" }
-                        )
-                    )
-                )
-                && (
-                    ( !$config{ $prefix . $i . "_whenStatusInactive" } )
-                    || (
-                        !$char->statusActive(
-                            $config{ $prefix . $i . "_whenStatusInactive" }
-                        )
-                    )
-                )
-                && ( round( distance( $charpos, $monsterpos ) ) <=
-                    $config{ $prefix . $i . "_dist" } )
-              )
             {
-                my $monsterID = $currentTarget->{type};
-                my $castLevel = 10;
-                my $damageNeeded =
-                  $monsterDB{$monsterID}{HP} + $currentTarget->{deltaHp};
-                my $estimatedDamage;
-
-                $skill{'handle'}  = $skillObj->getHandle;
-                $skill{'skillID'} = $skillObj->getIDN;
-                my $formula    = $config{ $prefix . $i . '_damageFormula' };
-                my $damageType = $config{ $prefix . $i . '_damageType' };
-                for (
-                    my $x = 1 ;
-                    $x <= $char->{'skills'}->{ $skillObj->getHandle }->{'lv'} ;
-                    $x++
-                  )
-                {
-                    $castLevel       = $x;
-                    $estimatedDamage = calcSkillDamage( $formula, $x,
-                        int( $currentTarget->{type} ), $damageType );
-                    debug(
-"Checking $skill{'handle'} at level $x need $damageNeeded estimate $estimatedDamage\n",
-                        'enhancedCasting', 1
-                    );
-                    last if ( $estimatedDamage >= $damageNeeded );
-                }
-                if (   ( $estimatedDamage < $damageNeeded )
-                    && ( $config{ $prefix . $i . "_fallThrough" } ) )
-                {
-                    debug(
-"I am allowed to fall through to the next skill because my damage is too low\n",
-                        'enhancedCasting', 1
-                    );
-                    $fellThrough = 1;
-                }
-                $i++;
-                next if $fellThrough;
-                last if ( $damageNeeded <= 0 );
-                $skill{'lvl'} = $castLevel;
-                $skill{'maxCastTime'} =
-                  $config{ $prefix . $i . "_maxCastTime" };
-                $skill{'minCastTime'} =
-                  $config{ $prefix . $i . "_minCastTime" };
-                $skill{'target'}               = $currentTarget->{ID};
-                $skill{'stage'}                = 'skillUse';
-                $skillUse{ $skill{'skillID'} } = 0;
-                AI::queue( 'enhancedCasting', \%skill );
-                $delay{ $prefix . $i . "_blockDelayAfterUse" }{'timeout'} =
-                  $config{ $prefix . $i . "_blockDelayAfterUse" };
-                $delay{ $prefix . $i . "_blockDelayAfterUse" }{'time'} = time;
-                $delay{ $prefix . $i . "_blockDelayBeforeUse" }{'set'} = 0;
-                debug(
-"Selected level $skill{'lvl'} for $skill{'handle'} to attack $currentTarget->{'name_given'}\n",
+                next;
+            }
+            
+            unless ( ( !$config{ $prefix . $i . "_notSize" } )
+                    || !existsInList( $config{ $prefix . $i . "_notSize" }, $size ) )
+            {
+                next;
+            }
+            
+            unless ( ( !$config{ $prefix . $i . "_notImmovable" } )
+                    || ( $monsterDB{$ID}{mode} & MD_CANMOVE ) )
+            {
+                next;
+            }
+            
+            unless (  (!$config{ $prefix . $i . "_dist" } )
+                    || round( distance( $charpos, $monsterpos ) ) <= $config{ $prefix . $i . "_dist" } )
+            {
+                next;
+            }
+            
+            
+            
+            my $monsterID    = $currentTarget->{type};
+            my $castLevel    = 10;
+            my $damageNeeded = $monsterDB{$monsterID}{HP} + $currentTarget->{deltaHp};
+            my $estimatedDamage;
+            
+            $skill{'handle'}  = $skillObj->getHandle;
+            $skill{'skillID'} = $skillObj->getIDN;
+            my $formula    = $config{ $prefix . $i . '_damageFormula' };
+            my $damageType = $config{ $prefix . $i . '_damageType' };
+            for ( my $x = 1 ; $x <= $char->{'skills'}->{ $skillObj->getHandle }->{'lv'} ; $x++ ) {
+                $castLevel       = $x;
+                $estimatedDamage = calcSkillDamage( $formula, $x, int( $currentTarget->{type} ), $damageType );
+                debug( "Checking $skill{'handle'} at level $x need $damageNeeded estimate $estimatedDamage\n",
                     'enhancedCasting', 1
                 );
-                last;
+                last if ( $estimatedDamage >= $damageNeeded );
             }
+            if (   ( $estimatedDamage < $damageNeeded )
+                && ( $config{ $prefix . $i . "_fallThrough" } ) )
+            {
+                debug( "I am allowed to fall through to the next skill because my damage is too low\n",
+                    'enhancedCasting', 1
+                );
+                $fellThrough = 1;
+            }
+            next if $fellThrough;
+            last if ( $damageNeeded <= 0 );
+            $skill{'lvl'}         = $castLevel;
+            $skill{'maxCastTime'} = $config{ $prefix . $i . "_maxCastTime" };
+            $skill{'minCastTime'} = $config{ $prefix . $i . "_minCastTime" };
+            $skill{'target'}      = $currentTarget->{ID};
+            $skill{'stage'}       = 'skillUse';
+            
+            $skillUse{ $skill{'skillID'} } = 0;
+            AI::queue( 'enhancedCasting', \%skill );
+            $delay{ $prefix . $i . "_blockDelayAfterUse" }{'timeout'} = $config{ $prefix . $i . "_blockDelayAfterUse" };
+            $delay{ $prefix . $i . "_blockDelayAfterUse" }{'time'}    = time;
+            $delay{ $prefix . $i . "_blockDelayBeforeUse" }{'set'}    = 0;
+            debug( "Selected level $skill{'lvl'} for $skill{'handle'} to attack $currentTarget->{'name_given'}\n",
+                'enhancedCasting', 1
+            );
+            last;
         }
+    } continue {
         $i++;
     }
 }
@@ -430,9 +402,10 @@ sub selectSkill {
 sub loadMonDB {
     %monsterDB = undef;
     debug( "Enhanced Casting: Loading Database\n", 'enhancedCasting', 2 );
-    open (my $fh, '<','plugins/mob_db.txt') 
-    or open (my $fh, '<', 'plugins/enhancedCasting/mob_db.txt') 
-    or error( "Enhanced Casting: can't load $file for monster information\n", 'enhancedCasting', 0 );
+    my $fh;
+    open ($fh, '<','plugins/mob_db.txt') 
+    or open ($fh, '<', 'plugins/enhancedCasting/mob_db.txt') 
+    or die( "Enhanced Casting: can't load file for monster information\n", 'enhancedCasting', 0 );
     
     my $i = 0;
     while (<$fh>) {
@@ -490,8 +463,7 @@ sub extendedCheck {
 
     if ( $args->{monster}->{element} && $args->{monster}->{element} ne '' ) {
         $element = $args->{monster}->{element};
-        debug(
-"enhancedCasting: Monster $args->{monster}->{name} has changed element to $args->{monster}->{element}\n",
+        debug( "enhancedCasting: Monster $args->{monster}->{name} has changed element to $args->{monster}->{element}\n",
             'enhancedCasting', 3
         );
     }
@@ -501,8 +473,7 @@ sub extendedCheck {
     {
         $element     = 'Earth';
         $element_lvl = 1;
-        debug(
-"enhancedCasting: Monster $args->{monster}->{name} is petrified changing element to Earth\n",
+        debug( "enhancedCasting: Monster $args->{monster}->{name} is petrified changing element to Earth\n",
             'enhancedCasting', 3
         );
     }
@@ -510,34 +481,21 @@ sub extendedCheck {
     if ( $args->{monster}->statusActive('BODYSTATE_FREEZING') ) {
         $element     = 'Water';
         $element_lvl = 1;
-        debug(
-"enhancedCasting: Monster $args->{monster}->{name} is frozen changing element to Water\n",
+        debug( "enhancedCasting: Monster $args->{monster}->{name} is frozen changing element to Water\n",
             'enhancedCasting', 3
         );
     }
 
-    if (
-        $config{ $args->{prefix} . '_Element' }
-        && (
-            !existsInList( $config{ $args->{prefix} . '_Element' }, $element )
-            && !existsInList($config{ $args->{prefix} . '_Element' },$element . $element_lvl
-            )
-        )
-      )
+    if ( $config{ $args->{prefix} . '_Element' }
+        && ( !existsInList( $config{ $args->{prefix} . '_Element' }, $element )
+        && !existsInList($config{ $args->{prefix} . '_Element' },$element . $element_lvl ) ) )
     {
         return $args->{return} = 0;
     }
 
-    if (
-        $config{ $args->{prefix} . '_notElement' }
-        && (
-            existsInList(
-                $config{ $args->{prefix} . '_notElement' }, $element
-            )
-            || existsInList($config{ $args->{prefix} . '_notElement' },$element . $element_lvl
-            )
-        )
-      )
+    if ( $config{ $args->{prefix} . '_notElement' }
+        && ( existsInList( $config{ $args->{prefix} . '_notElement' }, $element )
+        || existsInList($config{ $args->{prefix} . '_notElement' },$element . $element_lvl ) ) )
     {
         return $args->{return} = 0;
     }
@@ -566,13 +524,8 @@ sub extendedCheck {
         return $args->{return} = 0;
     }
 
-    if (
-        $config{ $args->{prefix} . '_hpLeft' }
-        && !inRange(
-            ( $monsterDB{$ID}->{HP} + $args->{monster}->{deltaHp} ),
-            $config{ $args->{prefix} . '_hpLeft' }
-        )
-      )
+    if ( $config{ $args->{prefix} . '_hpLeft' }
+        && !inRange( ( $monsterDB{$ID}->{HP} + $args->{monster}->{deltaHp} ), $config{ $args->{prefix} . '_hpLeft' } ) )
     {
         return $args->{return} = 0;
     }
@@ -580,8 +533,7 @@ sub extendedCheck {
     if ( $config{ $args->{prefix} . '_notImmovable' }
         && ( !( $monsterDB{$ID}{mode} & MD_CANMOVE ) ) )
     {
-        debug(
-"Will not cast $config{$skillBlock} on an immovable $args->{monster}\n",
+        debug( "Will not cast $config{$skillBlock} on an immovable $args->{monster}\n",
             'enhancedCasting', 1
         );
         return $args->{return} = 0;
@@ -595,16 +547,10 @@ sub extendedCheck {
         int( $args->{monster}->{nameID} ),
         $config{ $skillBlock . '_damageType' }
     );
-    if (
-        $config{ $skillBlock . '_damageFormula' }
-        && inRange(
-            ( $monsterDB{$ID}{HP} + $args->{monster}->{deltaHp} ),
-            '>= ' . $potentialDamage
-        )
-      )
+    if ( $config{ $skillBlock . '_damageFormula' }
+        && inRange( ( $monsterDB{$ID}{HP} + $args->{monster}->{deltaHp} ),'>= ' . $potentialDamage ) )
     {
-        debug(
-"Rejected $config{$skillBlock} with estimated damage : $potentialDamage using skill level $skillLevel\n",
+        debug( "Rejected $config{$skillBlock} with estimated damage : $potentialDamage using skill level $skillLevel\n",
             'enhancedCasting', 1
         );
         return $args->{return} = 0;
@@ -646,8 +592,7 @@ sub calcSkillDamage {
     my $matkav      = $char->{attack_magic_max} + $matkstatus;
     my $mDEF_Bypass = 0;
     my $int         = $char->{int} + $char->{int_bonus};
-    $formula =~
-s/mATK/\(\$matkav - \(\$monsterDB\{\$monsterID\}\{mDEF\} - \$mDEF_Bypass\)\)/;
+    $formula =~ s/mATK/\(\$matkav - \(\$monsterDB\{\$monsterID\}\{mDEF\} - \$mDEF_Bypass\)\)/;
     $formula =~ s/sLVL/\$skillLevel/;
     $formula =~ s/bLVL/\$char->{lv}/;
     $formula =~ s/INT/\$int/;
@@ -673,8 +618,7 @@ sub onPacketSkillUseNoDmg {
         && $args->{targetID} ne $accountID
         && $skillChangeElement{ $args->{skillID} } )
     {
-        $monsters{ $args->{targetID} }{element} =
-          $skillChangeElement{ $args->{skillID} };
+        $monsters{ $args->{targetID} }{element} = $skillChangeElement{ $args->{skillID} };
         monsterEquip( $monsters{ $args->{targetID} } );
         return 1;
     }
@@ -689,8 +633,7 @@ sub monsterHp {
     return 1 unless $monster && $monster->{nameID};
     my $ID = int( $monster->{nameID} );
     return 1 unless my $monsterInfo = $monsterDB{$ID};
-    $$message =~
-s~(?=\n)~TF(" (HP: %d/%d)", $monsterDB{$ID}{HP} + $monster->{deltaHp}, $monsterDB{$ID}{HP})~se;
+    $$message =~ s~(?=\n)~TF(" (HP: %d/%d)", $monsterDB{$ID}{HP} + $monster->{deltaHp}, $monsterDB{$ID}{HP})~se;
 }
 
 sub onAttackStart {
