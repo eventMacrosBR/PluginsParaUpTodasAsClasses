@@ -219,11 +219,11 @@ sub selectSkill {
           )
         {
             my $skillObj = Skill->new( auto => $config{ $prefix . $i } );
-            unless ( $skillObj->getHandle ) {
+            unless ( $skillObj->getHandle() ) {
                 my $msg = 
                     "Unknown skill name "
                   . $config{ $prefix . $i }
-                  . " in $prefix.$i\n";
+                  . " in $prefix$i\n";
                 error $msg;
                 configModify( $prefix . $i . "_disabled", 1 );
                 next;
