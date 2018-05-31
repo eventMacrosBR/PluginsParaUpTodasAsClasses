@@ -214,6 +214,8 @@ sub selectSkill {
         my $fellThrough = 0;
         if ( ( main::checkSelfCondition( $prefix . $i ) )
             && main::timeOut( $delay{ $prefix . $i . "_blockDelayBeforeUse" } )
+            && $config{ $prefix . $i . "_disabled" } == 0
+            && defined $config{ $prefix . $i }
           )
         {
             my $skillObj = Skill->new( auto => $config{ $prefix . $i } );
