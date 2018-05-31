@@ -216,7 +216,7 @@ sub selectSkill {
             && main::timeOut( $delay{ $prefix . $i . "_blockDelayBeforeUse" } )
           )
         {
-            my $skillObj = Skill->new( name => $config{ $prefix . $i } );
+            my $skillObj = Skill->new( auto => $config{ $prefix . $i } );
             unless ( $skillObj->getHandle ) {
                 my $msg = 
                     "Unknown skill name "
